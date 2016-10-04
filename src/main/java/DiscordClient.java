@@ -27,8 +27,7 @@ public class DiscordClient {
 
     private static IDiscordClient createClient() throws DiscordException {
         ClientBuilder builder = new ClientBuilder();
-        Map<String, String> env = System.getenv();
-        String token = "URTOKEN";
+        String token = "TOKEN";
         builder.withToken(token);
         return builder.login();
     }
