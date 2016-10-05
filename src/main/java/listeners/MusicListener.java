@@ -5,7 +5,6 @@ import org.slf4j.LoggerFactory;
 import sx.blah.discord.api.events.EventSubscriber;
 import sx.blah.discord.handle.impl.events.MessageReceivedEvent;
 import sx.blah.discord.handle.obj.IChannel;
-import sx.blah.discord.handle.obj.IGuild;
 import sx.blah.discord.handle.obj.IMessage;
 import sx.blah.discord.handle.obj.IVoiceChannel;
 import sx.blah.discord.util.DiscordException;
@@ -16,26 +15,31 @@ import sx.blah.discord.util.audio.AudioPlayer;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.UnsupportedAudioFileException;
 import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.concurrent.CompletableFuture;
 
 
 public class MusicListeners {
     private final static Logger logger = LoggerFactory.getLogger(MusicListeners.class);
 
+    public static CompletableFuture<Void> processCommand(Runnable runnable) {
+        return CompletableFuture.runAsync(runnable)
+                .exceptionally(t -> {
+                    logger.warn("Could not complete command", t);
+                    return null;
+                });
+    }
+
     @EventSubscriber
     public void onMessageRecievedEvent(MessageReceivedEvent event) {
         IMessage message = event.getMessage();
         String content = message.getContent();
-        IVoiceChannel channel;
 
-            if (content.equalsIgnoreCase("!summon")) {
-                processCommand(() -> summonCommand(event));
-            }
-            if (content.startsWith("!play ")) {
-                processCommand(() -> playCommand(event));
-            }
+        if (content.equalsIgnoreCase("!summon")) {
+            processCommand(() -> summonCommand(event));
+        }
+        if (content.startsWith("!play ")) {
+            processCommand(() -> playCommand(event));
+        }
     }
 
     private void summonCommand(MessageReceivedEvent event) {
@@ -95,14 +99,5 @@ public class MusicListeners {
             logger.warn("Could not start process", e);
         }
         return false;
-    }
-
-
-    public static CompletableFuture<Void> processCommand(Runnable runnable) {
-        return CompletableFuture.runAsync(runnable)
-                .exceptionally(t -> {
-                    logger.warn("Could not complete command", t);
-                    return null;
-                });
     }
 }
