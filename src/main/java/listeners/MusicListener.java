@@ -18,10 +18,10 @@ import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
 
 
-public class MusicListeners {
-    private final static Logger logger = LoggerFactory.getLogger(MusicListeners.class);
+public class MusicListener {
+    private final static Logger logger = LoggerFactory.getLogger(MusicListener.class);
 
-    public static CompletableFuture<Void> processCommand(Runnable runnable) {
+    private static CompletableFuture<Void> processCommand(Runnable runnable) {
         return CompletableFuture.runAsync(runnable)
                 .exceptionally(t -> {
                     logger.warn("Could not complete command", t);
@@ -40,6 +40,23 @@ public class MusicListeners {
         if (content.startsWith("!play ")) {
             processCommand(() -> playCommand(event));
         }
+        if (content.equalsIgnoreCase("!skip")) {
+            processCommand(() -> skipCommand(event));
+        }
+        if (content.equalsIgnoreCase("!stop")) {
+            processCommand(() -> stopCommand(event));
+        }
+    }
+
+    private void skipCommand(MessageReceivedEvent event) {
+        IMessage message = event.getMessage();
+        AudioPlayer audioPlayer = AudioPlayer.getAudioPlayerForGuild(message.getGuild());
+        try {
+            message.getChannel().sendMessage("Skipping current song");
+        } catch (MissingPermissionsException | DiscordException | RateLimitException e) {
+            logger.warn(e.getMessage());
+        }
+        audioPlayer.skip();
     }
 
     private void summonCommand(MessageReceivedEvent event) {
@@ -53,6 +70,18 @@ public class MusicListeners {
         }
     }
 
+    private void stopCommand(MessageReceivedEvent event) {
+        IMessage message = event.getMessage();
+        AudioPlayer audioPlayer = AudioPlayer.getAudioPlayerForGuild(message.getGuild());
+
+        audioPlayer.clear();
+        try {
+            message.getChannel().sendMessage("Stopped the playback");
+        } catch (MissingPermissionsException | DiscordException | RateLimitException e) {
+            logger.warn(e.getMessage());
+        }
+    }
+
     private void playCommand(MessageReceivedEvent event) {
         IMessage message = event.getMessage();
         String content = message.getContent();
@@ -61,7 +90,7 @@ public class MusicListeners {
 
         try {
             if (channel.isPrivate()) {
-                channel.sendMessage("Dude, fuck off");
+                channel.sendMessage("Dude, I don't respond to private messages!");
                 return;
             }
 

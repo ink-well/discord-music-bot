@@ -3,14 +3,13 @@ import org.slf4j.LoggerFactory;
 import sx.blah.discord.api.ClientBuilder;
 import sx.blah.discord.api.IDiscordClient;
 import sx.blah.discord.util.DiscordException;
-
-import java.util.Map;
+import util.Property;
 
 
 public class DiscordClient {
     private final static Logger log = LoggerFactory.getLogger(DiscordClient.class);
     private static IDiscordClient client;
-
+    private final static String TOKEN = Property.getInstance().getProperty("discord");
     private DiscordClient() {
     }
 
@@ -27,8 +26,7 @@ public class DiscordClient {
 
     private static IDiscordClient createClient() throws DiscordException {
         ClientBuilder builder = new ClientBuilder();
-        String token = "TOKEN";
-        builder.withToken(token);
+        builder.withToken(TOKEN);
         return builder.login();
     }
 }

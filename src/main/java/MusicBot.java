@@ -1,4 +1,4 @@
-import listeners.MusicListeners;
+import listeners.MusicListener;
 import sx.blah.discord.api.IDiscordClient;
 import sx.blah.discord.api.events.EventDispatcher;
 
@@ -8,6 +8,6 @@ public class MusicBot {
         IDiscordClient discordClient = DiscordClient.getClient();
         EventDispatcher discordDispatcher = discordClient.getDispatcher();
 
-        discordDispatcher.registerListener(new MusicListeners());
+        discordDispatcher.registerListener(new MusicListener());
     }
 }
