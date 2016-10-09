@@ -11,23 +11,16 @@ import sx.blah.discord.util.DiscordException;
 import sx.blah.discord.util.MissingPermissionsException;
 import sx.blah.discord.util.RateLimitException;
 import sx.blah.discord.util.audio.AudioPlayer;
+import util.ConcUtil;
 
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.UnsupportedAudioFileException;
-import java.io.IOException;
-import java.util.concurrent.CompletableFuture;
+import java.io.*;
+import java.util.stream.Collectors;
 
 
 public class MusicListener {
     private final static Logger logger = LoggerFactory.getLogger(MusicListener.class);
-
-    private static CompletableFuture<Void> processCommand(Runnable runnable) {
-        return CompletableFuture.runAsync(runnable)
-                .exceptionally(t -> {
-                    logger.warn("Could not complete command", t);
-                    return null;
-                });
-    }
 
     @EventSubscriber
     public void onMessageRecievedEvent(MessageReceivedEvent event) {
@@ -35,16 +28,16 @@ public class MusicListener {
         String content = message.getContent();
 
         if (content.equalsIgnoreCase("!summon")) {
-            processCommand(() -> summonCommand(event));
+            ConcUtil.processCommand(() -> summonCommand(event), logger);
         }
         if (content.startsWith("!play ")) {
-            processCommand(() -> playCommand(event));
+            ConcUtil.processCommand(() -> playCommand(event), logger);
         }
         if (content.equalsIgnoreCase("!skip")) {
-            processCommand(() -> skipCommand(event));
+            ConcUtil.processCommand(() -> skipCommand(event), logger);
         }
         if (content.equalsIgnoreCase("!stop")) {
-            processCommand(() -> stopCommand(event));
+            ConcUtil.processCommand(() -> stopCommand(event), logger);
         }
     }
 
@@ -115,15 +108,21 @@ public class MusicListener {
         ProcessBuilder builder = new ProcessBuilder(osName, "-q", "-f", "worstaudio",
                 "--exec", "ffmpeg -hide_banner -nostats -loglevel panic -y -i {} -vn -q:a 5 -f mp3 pipe:1", "-o",
                 "%(id)s", "--", url);
+        InputStream stream = null;
         try {
             Process process = builder.start();
             try {
-                player.queue(AudioSystem.getAudioInputStream(process.getInputStream()));
+                stream = process.getInputStream();
+                player.queue(AudioSystem.getAudioInputStream(stream));
                 return true;
             } catch (UnsupportedAudioFileException e) {
                 logger.warn("Could not queue audio", e);
                 process.destroyForcibly();
             }
+        } catch (EOFException e) {
+            String result = new BufferedReader(new InputStreamReader(stream))
+                    .lines().collect(Collectors.joining("\n"));
+            logger.warn("EOF Reached!\n", result);
         } catch (IOException e) {
             logger.warn("Could not start process", e);
         }

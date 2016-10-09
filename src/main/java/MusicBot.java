@@ -1,3 +1,4 @@
+import listeners.GifListener;
 import listeners.MusicListener;
 import sx.blah.discord.api.IDiscordClient;
 import sx.blah.discord.api.events.EventDispatcher;
@@ -9,5 +10,6 @@ public class MusicBot {
         EventDispatcher discordDispatcher = discordClient.getDispatcher();
 
         discordDispatcher.registerListener(new MusicListener());
+        discordDispatcher.registerListener(new GifListener());
     }
 }

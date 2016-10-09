@@ -10,6 +10,7 @@ public class DiscordClient {
     private final static Logger log = LoggerFactory.getLogger(DiscordClient.class);
     private static IDiscordClient client;
     private final static String TOKEN = Property.getInstance().getProperty("discord");
+
     private DiscordClient() {
     }
 
